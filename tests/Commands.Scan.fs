@@ -101,7 +101,7 @@ module ``scanRepositoryContent should`` =
         test <@ savedRules |> Seq.toList = expected @>
 
     [<Property>]
-    let ``return default message when empty`` aliases =
+    let ``return nothing when empty repository`` aliases =
         let infra = {
             defaultInfra with
                 LoadConfig = fun () -> Ok { defaultConfig with Aliases = aliases }
@@ -109,10 +109,17 @@ module ``scanRepositoryContent should`` =
                 ScanRepositoryContent = fun a ->
                     test <@ a = aliases @>
                     []
+                SaveScanFileContent = fun _ result ->
+                    test <@ result = [] @>
+                    Ok ()
+                OpenScanFileForUserEdition = fun () -> Ok ()
+                ReadScanFileContent = fun () -> Ok []
+                SaveTrackFile = fun _ -> Ok ()
+                SaveRules = fun _ -> Ok ()
         }
 
         let result = scanRepositoryContent infra ()
-        test <@ result = Error "Repository is empty." @>
+        test <@ result = Ok () @>
 
     [<Fact>]
     let ``remove deleted elements from track and not discard unmodified elements`` () =

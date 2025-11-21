@@ -161,18 +161,18 @@ module Synchronize =
             | _, Save when childrenRules |> Seq.exists (fun child -> child.Item.BackupRule = NotDelete) -> sourceRule, NotDelete
             | _ -> sourceRule, backupRule
 
-        let rec spreadRules' (lastSourceRule: SourceRule) (lastBackupRule: BackupRule) = function
-            | [] -> Ok []
-            | treeItem::items ->
+        let rec spreadRules' (lastSourceRule: SourceRule) (lastBackupRule: BackupRule) =
+            List.map (fun treeItem ->
                 result {
                     let treeItem: Tree<OriginRule> = treeItem
                     let! appliedSourceRule, appliedBackupRule = computeRule lastSourceRule lastBackupRule treeItem.Element.Item
                     let! childrenWithSpreadRules = spreadRules' appliedSourceRule appliedBackupRule treeItem.Children
                     let appliedSourceRule, appliedBackupRule = correctRule childrenWithSpreadRules appliedSourceRule appliedBackupRule
                     let itemsWithSpreadRules = treeItem.Element.map (fun origin -> { Path = origin.Path; SourceRule = appliedSourceRule; BackupRule = appliedBackupRule; IsUpdated = origin.IsUpdated })
-                    let! otherItems = spreadRules' lastSourceRule lastBackupRule items
-                    return [itemsWithSpreadRules]@childrenWithSpreadRules@otherItems
+                    return itemsWithSpreadRules::childrenWithSpreadRules
                 }
+            )
+            >> foldResults
 
         spreadRules' Include Save
 
@@ -279,18 +279,18 @@ module Replicate =
             | Save when childrenRules |> Seq.exists (fun child -> child.Item.BackupRule = NotDelete) -> NotDelete
             | _ -> rule
 
-        let rec spreadRules' (lastRule: BackupRule) = function
-            | [] -> Ok []
-            | treeItem::items ->
+        let rec spreadRules' (lastRule: BackupRule) =
+            List.map (fun treeItem ->
                 result {
                     let treeItem: Tree<OriginRule> = treeItem
                     let! appliedRule = computeRule lastRule treeItem.Element.Item.Rule
                     let! childrenWithSpreadRules = spreadRules' appliedRule treeItem.Children
                     let appliedRule = correctRule childrenWithSpreadRules appliedRule
                     let itemsWithSpreadRules = treeItem.Element.map (fun origin -> { Path = origin.Path; BackupRule = appliedRule; IsUpdated = origin.IsUpdated })
-                    let! otherItems = spreadRules' lastRule items
-                    return [itemsWithSpreadRules]@childrenWithSpreadRules@otherItems
+                    return itemsWithSpreadRules::childrenWithSpreadRules
                 }
+            )
+            >> foldResults
 
         spreadRules' Save
 
