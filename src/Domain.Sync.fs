@@ -161,18 +161,18 @@ module Synchronize =
             | _, Save when childrenRules |> Seq.exists (fun child -> child.Item.BackupRule = NotDelete) -> sourceRule, NotDelete
             | _ -> sourceRule, backupRule
 
-        let rec spreadRules' (lastSourceRule: SourceRule) (lastBackupRule: BackupRule) = function
-            | [] -> Ok []
-            | treeItem::items ->
+        let rec spreadRules' (lastSourceRule: SourceRule) (lastBackupRule: BackupRule) =
+            List.map (fun treeItem ->
                 result {
                     let treeItem: Tree<OriginRule> = treeItem
                     let! appliedSourceRule, appliedBackupRule = computeRule lastSourceRule lastBackupRule treeItem.Element.Item
                     let! childrenWithSpreadRules = spreadRules' appliedSourceRule appliedBackupRule treeItem.Children
                     let appliedSourceRule, appliedBackupRule = correctRule childrenWithSpreadRules appliedSourceRule appliedBackupRule
                     let itemsWithSpreadRules = treeItem.Element.map (fun origin -> { Path = origin.Path; SourceRule = appliedSourceRule; BackupRule = appliedBackupRule; IsUpdated = origin.IsUpdated })
-                    let! otherItems = spreadRules' lastSourceRule lastBackupRule items
-                    return [itemsWithSpreadRules]@childrenWithSpreadRules@otherItems
+                    return itemsWithSpreadRules::childrenWithSpreadRules
                 }
+            )
+            >> foldResults
 
         spreadRules' Include Save
 
