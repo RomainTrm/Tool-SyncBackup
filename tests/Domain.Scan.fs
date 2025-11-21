@@ -15,9 +15,10 @@ module ``buildScanResult should`` =
         test <@ result = Ok expected @>
 
     [<Property(Arbitrary = [| typeof<PathStringGenerator> |])>]
-    let ``return error when no element scanned`` rules tracked =
+    let ``accepts when no element scanned`` rules tracked =
         let result = buildScanResult rules tracked []
-        test <@ result = Error "Repository is empty." @>
+        test <@ Result.isOk result @>
+        test <@ Result.map (List.forall (fun diff -> diff.Diff = RemovedFromRepository)) result = Ok true @>
 
     [<Property(Arbitrary = [| typeof<PathStringGenerator> |])>]
     let ``return all paths as added without rule when no tracked neither rules`` contents =
