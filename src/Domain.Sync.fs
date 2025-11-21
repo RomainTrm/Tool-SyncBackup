@@ -279,18 +279,18 @@ module Replicate =
             | Save when childrenRules |> Seq.exists (fun child -> child.Item.BackupRule = NotDelete) -> NotDelete
             | _ -> rule
 
-        let rec spreadRules' (lastRule: BackupRule) = function
-            | [] -> Ok []
-            | treeItem::items ->
+        let rec spreadRules' (lastRule: BackupRule) =
+            List.map (fun treeItem ->
                 result {
                     let treeItem: Tree<OriginRule> = treeItem
                     let! appliedRule = computeRule lastRule treeItem.Element.Item.Rule
                     let! childrenWithSpreadRules = spreadRules' appliedRule treeItem.Children
                     let appliedRule = correctRule childrenWithSpreadRules appliedRule
                     let itemsWithSpreadRules = treeItem.Element.map (fun origin -> { Path = origin.Path; BackupRule = appliedRule; IsUpdated = origin.IsUpdated })
-                    let! otherItems = spreadRules' lastRule items
-                    return [itemsWithSpreadRules]@childrenWithSpreadRules@otherItems
+                    return itemsWithSpreadRules::childrenWithSpreadRules
                 }
+            )
+            >> foldResults
 
         spreadRules' Save
 
