@@ -11,19 +11,19 @@ let lastWriteTime = DateTime(2024, 08, 10, 10, 43, 30)
 let d1 = { Path = { Type = Source; Value = "d1"; ContentType = Directory }; LastWriteTime = None }
 let d2 = { Path = { Type = Source; Value = "d2"; ContentType = Directory }; LastWriteTime = None }
 let d3 = { Path = { Type = Source; Value = "d3"; ContentType = Directory }; LastWriteTime = None }
-let d1s1 = { Path = { Type = Source; Value = "d1/s1"; ContentType = Directory }; LastWriteTime = None }
-let d1s2 = { Path = { Type = Source; Value = "d1/s2"; ContentType = Directory }; LastWriteTime = None }
-let d1s1f1 = { Path = { Type = Source; Value = "d1/s1/f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d1s1f2 = { Path = { Type = Source; Value = "d1/s1/f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d1s2f1 = { Path = { Type = Source; Value = "d1/s2/f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d2f1 = { Path = { Type = Source; Value = "d2/f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d2f2 = { Path = { Type = Source; Value = "d2/f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d2f3 = { Path = { Type = Source; Value = "d2/f3"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d2f4 = { Path = { Type = Source; Value = "d2/f4"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d2f5 = { Path = { Type = Source; Value = "d2/f5"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d3f1 = { Path = { Type = Source; Value = "d3/f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d3f2 = { Path = { Type = Source; Value = "d3/f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
-let d3f3 = { Path = { Type = Source; Value = "d3/f3"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d1s1 = { Path = { Type = Source; Value = "d1\\s1"; ContentType = Directory }; LastWriteTime = None }
+let d1s2 = { Path = { Type = Source; Value = "d1\\s2"; ContentType = Directory }; LastWriteTime = None }
+let d1s1f1 = { Path = { Type = Source; Value = "d1\\s1\\f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d1s1f2 = { Path = { Type = Source; Value = "d1\\s1\\f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d1s2f1 = { Path = { Type = Source; Value = "d1\\s2\\f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d2f1 = { Path = { Type = Source; Value = "d2\\f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d2f2 = { Path = { Type = Source; Value = "d2\\f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d2f3 = { Path = { Type = Source; Value = "d2\\f3"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d2f4 = { Path = { Type = Source; Value = "d2\\f4"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d2f5 = { Path = { Type = Source; Value = "d2\\f5"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d3f1 = { Path = { Type = Source; Value = "d3\\f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d3f2 = { Path = { Type = Source; Value = "d3\\f2"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+let d3f3 = { Path = { Type = Source; Value = "d3\\f3"; ContentType = File }; LastWriteTime = Some lastWriteTime }
 
 let rnd = Random();
 let randomizeOrder _ _ = rnd.Next ()

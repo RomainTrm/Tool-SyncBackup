@@ -88,32 +88,36 @@ module Synchronize =
         (sourceRules: Rule list)
         (backupItems: Content list)
         (backupRules: Rule list) =
-        let rec buildTree' (tree: Tree<OriginRule> list) (item: Item<OriginRule>) =
-            if tree |> List.exists (fun treeItem -> RelativePath.contains item.Item.Path treeItem.Element.Item.Path)
-            then
-                tree
-                |> List.map (fun treeItem ->
-                    if RelativePath.contains item.Item.Path treeItem.Element.Item.Path
-                    then { treeItem with Children = buildTree' treeItem.Children item }
-                    else treeItem
-                )
-            else { Element = item; Children = [] }::tree
+        let rec buildTree' (currentPath: RelativePath) (items: Map<RelativePath, Item<OriginRule> list>) =
+            items
+            |> Map.tryFind currentPath
+            |> Option.map (List.map (fun child -> { Element = child; Children = buildTree' child.Item.Path items }))
+            |> Option.defaultValue []
 
-        let paths =
-            sourceItems@(sourceRules |> List.map ruleToContent)@backupItems@(backupRules |> List.map ruleToContent)
-            |> List.distinctBy _.Path.Value
+        let rec reduceTree (items: Item<OriginRule> list) =
+            let rootPath : RelativePath = { ContentType = Directory; Type = Source; Value = "" }
+            items
+            |> List.groupBy (_.Item.Path >> RelativePath.getParents  >> List.tryLast >> Option.defaultValue rootPath)
+            |> Map
+            |> buildTree' rootPath
 
-        let sourceItems = sourceItems |> List.map (fun x -> x.Path.Value, x) |> Map
-        let sourceRules = sourceRules |> List.map (fun x -> x.Path.Value, x.SyncRule) |> Map
-        let backupItems = backupItems |> List.map (fun x -> x.Path.Value, x) |> Map
-        let backupRules = backupRules |> List.map (fun x -> x.Path.Value, x.SyncRule) |> Map
+        let sourceItemsMap = sourceItems |> List.map (fun x -> x.Path.Value, x) |> Map
+        let sourceRulesMap = sourceRules |> List.map (fun x -> x.Path.Value, x.SyncRule) |> Map
+        let backupItemsMap = backupItems |> List.map (fun x -> x.Path.Value, x) |> Map
+        let backupRulesMap = backupRules |> List.map (fun x -> x.Path.Value, x.SyncRule) |> Map
 
-        paths
+        Seq.concat [
+            sourceItems |> Seq.ofList
+            sourceRules |> Seq.map ruleToContent
+            backupItems |> Seq.ofList
+            backupRules |> Seq.map ruleToContent
+        ]
+        |> Seq.distinctBy _.Path.Value
         |> Seq.collect (fun content ->
-            let sourceItem = sourceItems |> Map.tryFind content.Path.Value
-            let sourceRule = sourceRules |> Map.tryFind content.Path.Value
-            let backupItem = backupItems |> Map.tryFind content.Path.Value
-            let backupRule = backupRules |> Map.tryFind content.Path.Value
+            let sourceItem = sourceItemsMap |> Map.tryFind content.Path.Value
+            let sourceRule = sourceRulesMap |> Map.tryFind content.Path.Value
+            let backupItem = backupItemsMap |> Map.tryFind content.Path.Value
+            let backupRule = backupRulesMap |> Map.tryFind content.Path.Value
 
             match sourceItem, sourceRule, backupItem, backupRule with
             | None,         _,                  None,           _ ->                ([]: Item<OriginRule> list)
@@ -131,7 +135,8 @@ module Synchronize =
             | Some source,  Some sourceRule,    Some backup,    Some backupRule ->  [BothItem { Path = content.Path; SourceRule = sourceRule; BackupRule = backupRule; IsUpdated = isUpdated source backup }]
         )
         |> Seq.sortBy _.Item.Path.Value
-        |> Seq.fold buildTree' []
+        |> Seq.toList
+        |> reduceTree
 
     let private spreadRules =
         let computeSourceRule (lastRule: SourceRule) = function
