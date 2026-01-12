@@ -414,6 +414,34 @@ module ``synchronize should`` =
             Replace d2f1.Path
         ] @>
 
+    [<Fact>]
+    let ``bug fix: preserve deleted file`` () =
+        let d1s1 = { Path = { Type = Alias; Value = "d1\\s1"; ContentType = Directory }; LastWriteTime = None }
+        let d1s1ss1 = { Path = { Type = Source; Value = "d1\\s1\\s1"; ContentType = Directory }; LastWriteTime = None }
+        let d1s1ss2 = { Path = { Type = Source; Value = "d1\\s1\\s2"; ContentType = Directory }; LastWriteTime = None }
+        let d1s1ss1f1 = { Path = { Type = Source; Value = "d1\\s1\\s1\\f1"; ContentType = File }; LastWriteTime = Some lastWriteTime }
+
+        let sourceItems = [
+            { d1 with Path.Type = Alias }
+            { d1s1 with Path.Type = Alias }
+            { d1s1ss2 with Path.Type = Alias }
+        ]
+
+        let backupItems = [
+            d1
+            d1s1
+            d1s1ss1
+            d1s1ss1f1
+        ]
+
+        let backupRules = [
+            { Path = d1s1.Path; SyncRule = SyncRules.NotSave }
+            { Path = d1s1ss1.Path; SyncRule = SyncRules.NotDelete }
+        ]
+
+        let result = Synchronize.run sourceItems [] backupItems backupRules
+        test <@ result = Ok [] @>
+
 module ``replicate should`` =
     [<Fact>]
     let ``compute synchronize instructions when empty backup`` () =

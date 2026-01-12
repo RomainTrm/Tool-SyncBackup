@@ -58,6 +58,15 @@ module private Tree =
         let rootPath : RelativePath = { ContentType = Directory; Type = Source; Value = "" }
         items
         |> List.groupBy (pathSelector >> RelativePath.getParents >> List.tryLast >> Option.defaultValue rootPath)
+        |> List.groupBy (fun (relativePath, _) -> relativePath.Value, relativePath.ContentType) //
+        |> List.choose (fun (_, pathsWithItems) ->
+            match pathsWithItems with
+            | [group1; group2] ->
+                let relativePath = { fst group1 with Type = Alias } // Two groups mean one of them is an Alias
+                Some (relativePath, (snd group1)@(snd group2))
+            | [group] -> Some group
+            | _ -> None // Cannot happen
+        )
         |> Map
         |> buildTree' pathSelector rootPath
 
