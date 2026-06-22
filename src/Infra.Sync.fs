@@ -7,6 +7,8 @@ open SyncBackup.Domain.Dsl
 open SyncBackup.Domain.Sync
 
 module InstructionsFile =
+    let [<Literal>] private Accept = "Accept"
+
     let private buildFileContent sourceDirectory backupDirectory instructions =
         let fileLines = [
             "# Synchronizing from:"
@@ -14,7 +16,7 @@ module InstructionsFile =
             "# to:"
             $"#     {backupDirectory}"
             "# If you accept the following changes, uncomment the next line (remove #) and save:"
-            "# Accept"
+            $"# {Accept}"
             ""
             yield! instructions |> List.map SyncInstruction.serialize
             if instructions = []
@@ -34,9 +36,8 @@ module InstructionsFile =
         then Error "Missing instructions."
         else
             File.ReadAllLines filePath
-            |> Array.tryFind (fun line -> line.Contains "Accept")
-            |> Option.map (fun line -> line.Contains "#")
-            |> Option.map not
+            |> Array.tryFind (fun line -> line.Contains Accept)
+            |> Option.map (fun line -> line.Trim() = Accept)
             |> Option.defaultValue false
             |> Ok
 

@@ -79,6 +79,22 @@ module InstructionsFile =
             let result = InstructionsFile.areInstructionsAccepted path
             test <@ result = Ok true @>
 
+        [<Fact>]
+        let ``should not return false positive on instruction with Accept in path`` () =
+            let uniqueTestDirectory = "test-3d617642-78f7-4a96-8386-487c92443c1f"
+            let path = TestHelpers.setupConfigDirectoryTest uniqueTestDirectory
+
+            let _ = InstructionsFile.save path "whatever" [
+                SyncInstruction.Add { ContentType = File; Value = "Accept.pdf"; Type = PathType.Source  }
+            ]
+            let filePath = Dsl.getSyncInstructionsFilePath path
+            let fileContent = System.IO.File.ReadAllText filePath
+            let acceptedFileContent = fileContent.Replace("# Accept", "")
+            System.IO.File.WriteAllText (filePath, acceptedFileContent)
+
+            let result = InstructionsFile.areInstructionsAccepted path
+            test <@ result = Ok false @>
+
 module Process =
     let setupSyncDirectoryTest uniqueTestDirectory =
         let path = TestHelpers.testDirectoryPath uniqueTestDirectory
