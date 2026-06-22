@@ -42,10 +42,10 @@ module Scan =
                         scan' directoryPath buildRelativePath
                     with // Windows may detect a directory but fail to access it because it's not there
                     | :? UnauthorizedAccessException -> []
-                acc@[{ Path = path; LastWriteTime = None }]@children
+                List.concat [ acc; [{ Path = path; LastWriteTime = None }]; children ]
             ) []
 
-        files@directories
+        List.concat [ files; directories ]
 
     let run (repositoryPath: RepositoryPath) (aliases: Alias list) =
         let sourceDirectoryContent = scan' repositoryPath (sourceRelativePath repositoryPath)
@@ -58,7 +58,7 @@ module Scan =
                 }
                 aliasRoot::aliasContent
             ) aliases
-        sourceDirectoryContent@aliasesDirectoriesContent
+        List.concat [ sourceDirectoryContent; aliasesDirectoriesContent ]
 
 module ScanFile =
     let rec private print scanResult =
