@@ -64,9 +64,9 @@ module Process =
                     let backup = buildBackupFullPath backupDirectory path
                     File.Copy (source, backup)
                 | Add ({ ContentType = ContentType.Directory } as path) ->
+                    logger $"Adding {RelativePath.serialize path}"
                     let backup = buildBackupFullPath backupDirectory path
                     Directory.CreateDirectory backup |> ignore<DirectoryInfo>
-                    logger $"Adding {RelativePath.serialize path}"
 
                 | Replace ({ ContentType = ContentType.File } as path) ->
                     logger $"Replacing {RelativePath.serialize path}"
@@ -80,9 +80,9 @@ module Process =
                     let backup = buildBackupFullPath backupDirectory path
                     File.Delete backup
                 | Delete ({ ContentType = ContentType.Directory } as path) ->
+                    logger $"Deleting {RelativePath.serialize path}"
                     let backup = buildBackupFullPath backupDirectory path
                     Directory.Delete backup
-                    logger $"Deleting {RelativePath.serialize path}"
             with e -> logger e.Message
         )
         Ok ()
