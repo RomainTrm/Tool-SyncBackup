@@ -44,9 +44,16 @@ module ``RelativePath contains should`` =
         test <@ not result @>
 
     [<Property(Arbitrary = [| typeof<PathStringGenerator> |])>]
-    let ``return false is not start of child path`` path =
+    let ``return false if not start of child path`` path =
         isValidPath path ==> lazy
         let child = { path with Value = Path.Combine("root", path.Value, "subpath") }
+        let result = RelativePath.contains child path
+        test <@ not result @>
+
+    [<Property(Arbitrary = [| typeof<PathStringGenerator> |])>]
+    let ``return false if prefix of child path`` path =
+        isValidPath path ==> lazy
+        let child = { path with Value = Path.Combine($"{path.Value}-suffix", "subpath") }
         let result = RelativePath.contains child path
         test <@ not result @>
 
