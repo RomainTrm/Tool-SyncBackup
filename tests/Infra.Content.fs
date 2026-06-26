@@ -107,6 +107,21 @@ module ScanFile =
         { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2\\file2"; ContentType = File }; Diff = Updated }
     ]
 
+    let expectedContentOnRead = [
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\file"; ContentType = File }; Diff = RemovedFromRepository }
+        { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\1. emptyDir"; ContentType = Directory }; Diff = AddedToRepository }
+        // "MySource\\2. oneLevelDir" is not returned
+        { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\2. oneLevelDir\\file1"; ContentType = File }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\2. oneLevelDir\\file2"; ContentType = File }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir"; ContentType = Directory }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1"; ContentType = Directory }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1\\file1"; ContentType = File }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1\\file2"; ContentType = File }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2"; ContentType = Directory }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2\\file1"; ContentType = File }; Diff = AddedToRepository }
+        { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2\\file2"; ContentType = File }; Diff = Updated }
+    ]
+
     module ``writeFile should`` =
 
         [<Fact>]
@@ -156,20 +171,23 @@ module ScanFile =
             test <@ result = Ok () @>
 
             let result = ScanFile.readFile path
-            let expected = [
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\file"; ContentType = File }; Diff = RemovedFromRepository }
-                { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\1. emptyDir"; ContentType = Directory }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\2. oneLevelDir\\file1"; ContentType = File }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Source; Value = "MySource\\2. oneLevelDir\\file2"; ContentType = File }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir"; ContentType = Directory }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1"; ContentType = Directory }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1\\file1"; ContentType = File }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir1\\file2"; ContentType = File }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2"; ContentType = Directory }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2\\file1"; ContentType = File }; Diff = AddedToRepository }
-                { SyncRule = NoRule; Path = { Type = Alias; Value = "MyAlias\\3. twoLevelsDir\\subdir2\\file2"; ContentType = File }; Diff = Updated }
-            ]
-            test <@ result = Ok expected @>
+            test <@ result = Ok expectedContentOnRead @>
+
+        [<Fact>]
+        let ``should read file content when some leading spaces`` () =
+            let uniqueTestDirectory = "test-a864d347-0e6a-4e6c-aa70-877c9ce3adc6"
+            let path = TestHelpers.setupConfigDirectoryTest uniqueTestDirectory
+
+            let result = ScanFile.writeFile path RepositoryType.Source content
+            test <@ result = Ok () @>
+
+            let filePath = Dsl.getScanFileFilePath uniqueTestDirectory
+            let scanFileRawContent = System.IO.File.ReadAllLines(filePath)
+            // "Corrupt" file with leading spaces
+            System.IO.File.WriteAllLines(filePath, scanFileRawContent |> Array.map (sprintf "    %s"))
+
+            let result = ScanFile.readFile path
+            test <@ result = Ok expectedContentOnRead @>
 
         [<Theory>]
         [<InlineData("invalid")>]

@@ -4,10 +4,11 @@ open System
 open SyncBackup
 
 let [<Literal>] RepositoryConfigVersion = "1.0"
+let [<Literal>] PathLevelSeparator = '\\'
 
 type DirectoryPath = string
 module DirectoryPath =
-    let build (value: DirectoryPath) = value.Replace('/', '\\').TrimEnd [| '\\'; '\"' |]
+    let build (value: DirectoryPath) = value.Replace('/', PathLevelSeparator).TrimEnd [| PathLevelSeparator; '\"' |]
 
 type FilePath = string
 /// Some path provided by the user, code doesn't know if it points to an element in the source or in an alias, neither if it's a directory or a file
@@ -96,14 +97,14 @@ module RelativePath =
     let contains child parent =
         match child, parent with
         | _ when child = parent -> false
-        | { Value = childPath }, { Value = parentPath } -> childPath.StartsWith parentPath
+        | { Value = childPath }, { Value = parentPath } -> childPath.StartsWith $"{parentPath}{PathLevelSeparator}"
 
     let getParents child =
-        child.Value.Split "\\"
+        child.Value.Split PathLevelSeparator
         |> Seq.fold (fun paths name ->
             paths
             |> List.tryHead
-            |> Option.map (fun lastPath -> $"{lastPath}\\{name}")
+            |> Option.map (fun lastPath -> $"{lastPath}{PathLevelSeparator}{name}")
             |> Option.map (fun newPath -> newPath::paths)
             |> Option.defaultValue [name]
         ) []
