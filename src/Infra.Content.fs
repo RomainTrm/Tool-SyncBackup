@@ -86,10 +86,10 @@ module ScanFile =
         |> Ok
 
     let private removeComments (contentLine: string) =
-        not (String.IsNullOrWhiteSpace contentLine || contentLine.StartsWith "#")
+        not (String.IsNullOrWhiteSpace contentLine || contentLine.TrimStart().StartsWith "#")
 
     let private parseSyncResult (contentLine: string) =
-        match contentLine.Split ' ' |> Seq.toList with
+        match contentLine.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Seq.toList with
         | rule::scanDiff::path ->
             result {
                 let! rule = SyncRules.parse rule
