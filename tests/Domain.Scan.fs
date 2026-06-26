@@ -121,5 +121,6 @@ module ``defineTrackedElements should`` =
 
     [<Property(Arbitrary = [| typeof<PathStringGenerator> |])>]
     let ``removed elements that are flag as removed`` tracked (rule: Rule) =
+        not (tracked |> List.exists ((=) rule.Path)) ==> lazy
         let result = defineTrackedElements (tracked@[rule.Path]) [ScanResult.build RemovedFromRepository rule]
         test <@ Set result = Set tracked @>
