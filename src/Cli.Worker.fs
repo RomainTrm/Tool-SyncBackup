@@ -3,7 +3,7 @@
 open Argu
 open System
 
-let [<Literal>] CurrentVersion = "1.3.0"
+let [<Literal>] CurrentVersion = "1.3.1"
 
 let private executeCommand<'c when 'c :> IArgParserTemplate> run (command: ParseResults<'c>) =
     command.GetAllResults ()
